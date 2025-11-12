@@ -52,6 +52,9 @@ function App() {
         timestamp: new Date().toLocaleString()
       }]);
 
+      // 显示成功弹窗
+      alert(response.answer || 'Hello World!');
+
     } catch (error) {
       throw error;
     }

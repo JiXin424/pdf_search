@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001/api';
 
 export const submitQuestion = async ({ question, screenshot }) => {
   const formData = new FormData();
@@ -8,17 +8,27 @@ export const submitQuestion = async ({ question, screenshot }) => {
     formData.append('screenshot', screenshot.blob, 'screenshot.png');
   }
 
+  console.log('Submitting to:', `${API_BASE_URL}/ask`);
+  console.log('Question:', question);
+  console.log('Screenshot blob size:', screenshot?.blob?.size);
+
   try {
     const response = await fetch(`${API_BASE_URL}/ask`, {
       method: 'POST',
       body: formData,
     });
 
+    console.log('Response status:', response.status);
+    console.log('Response ok:', response.ok);
+
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Error response:', errorText);
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const result = await response.json();
+    console.log('Success result:', result);
     return result;
   } catch (error) {
     console.error('API请求失败:', error);
