@@ -88,4 +88,4 @@ API文档：`http://localhost:8000/docs`
 
 - 前端环境变量：`frontend/.env`
 - 后端环境变量：`backend/.env`
-- 上传文件存储：`backend/uploads/`
+- 上传文件存储：`backend/uploads/`# pdf_search
