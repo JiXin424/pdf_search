@@ -4,6 +4,8 @@ import FileUpload from './components/FileUpload';
 import PDFViewer from './components/PDFViewer';
 import QuestionModal from './components/QuestionModal';
 import AdvancedAreaSelector from './components/AdvancedAreaSelector';
+// import Chat from './components/Chat'; // 备选方案1 - 悬浮按钮聊天
+import ChatV2 from './components/ChatV2'; // 方案2 - 箭头展开聊天
 import { captureAreaScreenshot } from './utils/screenshot';
 import { submitQuestion } from './utils/api';
 
@@ -11,10 +13,10 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 function App() {
   const [pdfFile, setPdfFile] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentScreenshot, setCurrentScreenshot] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [isAreaSelecting, setIsAreaSelecting] = useState(false);
+  const [chatExpanded, setChatExpanded] = useState(false);
 
   const handleFileUpload = (file) => {
     setPdfFile(file);
@@ -26,13 +28,22 @@ function App() {
 
   const handleAreaSelect = async (area) => {
     try {
-      const screenshot = await captureAreaScreenshot('pdf-viewer-container', area);
-      setCurrentScreenshot(screenshot);
+      // 先设置loading状态，给用户反馈
       setIsAreaSelecting(false);
-      setIsModalOpen(true);
+
+      // 立即展开聊天界面，给用户即时反馈
+      setChatExpanded(true);
+
+      // 使用异步处理截图，避免阻塞UI
+      const screenshot = await captureAreaScreenshot('pdf-viewer-container', area);
+
+      // 设置截图
+      setCurrentScreenshot(screenshot);
     } catch (error) {
       alert('区域截图失败: ' + error.message);
       setIsAreaSelecting(false);
+      // 如果截图失败，收起聊天界面
+      setChatExpanded(false);
     }
   };
 
@@ -40,34 +51,21 @@ function App() {
     setIsAreaSelecting(false);
   };
 
-  const handleQuestionSubmit = async (data) => {
-    try {
-      const response = await submitQuestion(data);
-
-      setQuestions(prev => [...prev, {
-        id: Date.now(),
-        question: data.question,
-        screenshot: data.screenshot.url,
-        answer: response.answer || '正在处理您的问题...',
-        timestamp: new Date().toLocaleString()
-      }]);
-
-      // 显示成功弹窗
-      alert(response.answer || 'Hello World!');
-
-    } catch (error) {
-      throw error;
-    }
+  const handleChatToggle = (expanded) => {
+    setChatExpanded(expanded);
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-    setCurrentScreenshot(null);
+  const handleClearScreenshot = () => {
+    // 优化截图清理，避免UI卡顿
+    requestAnimationFrame(() => {
+      setCurrentScreenshot(null);
+    });
   };
 
   const clearPDF = () => {
     setPdfFile(null);
     setQuestions([]);
+    setCurrentScreenshot(null);
   };
 
   return (
@@ -159,11 +157,12 @@ function App() {
         />
       )}
 
-      <QuestionModal
-        isOpen={isModalOpen}
-        onClose={handleCloseModal}
+      {/* 方案2 - 箭头展开聊天 */}
+      <ChatV2
+        isExpanded={chatExpanded}
+        onToggle={handleChatToggle}
         screenshot={currentScreenshot}
-        onSubmit={handleQuestionSubmit}
+        onClearScreenshot={handleClearScreenshot}
       />
     </div>
   );

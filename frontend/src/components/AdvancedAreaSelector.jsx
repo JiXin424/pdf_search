@@ -87,9 +87,50 @@ const AdvancedAreaSelector = ({ onAreaSelect, onCancel, targetElement }) => {
   // 统一的鼠标移动处理
   useEffect(() => {
     const handleMouseMove = (e) => {
-      // 更新鼠标位置用于放大镜
+      // 更新鼠标位置用于放大镜 - 转换为与截图一致的坐标系统
       if (isSelecting) {
-        setMousePosition({ x: e.clientX, y: e.clientY });
+        // 获取目标元素的位置
+        const targetEl = document.getElementById(targetElement);
+        const overlayEl = overlayRef.current;
+
+        if (targetEl && overlayEl) {
+          const targetRect = targetEl.getBoundingClientRect();
+          const overlayRect = overlayEl.getBoundingClientRect();
+
+          // 计算鼠标在overlay中的位置
+          const mouseInOverlay = {
+            x: e.clientX - overlayRect.left,
+            y: e.clientY - overlayRect.top
+          };
+
+          // 计算目标元素在overlay中的位置
+          const targetInOverlay = {
+            left: targetRect.left - overlayRect.left,
+            top: targetRect.top - overlayRect.top
+          };
+
+          // 计算鼠标相对于目标元素的位置
+          const mouseInTarget = {
+            x: mouseInOverlay.x - targetInOverlay.left,
+            y: mouseInOverlay.y - targetInOverlay.top
+          };
+
+          // 只有当鼠标在目标元素范围内时才显示放大镜
+          if (mouseInTarget.x >= 0 && mouseInTarget.x <= targetRect.width &&
+              mouseInTarget.y >= 0 && mouseInTarget.y <= targetRect.height) {
+
+            setMousePosition({
+              x: e.clientX, // 全局坐标用于放大镜定位
+              y: e.clientY,
+              relativeX: mouseInTarget.x, // 相对坐标用于内容显示
+              relativeY: mouseInTarget.y
+            });
+          } else {
+            setMousePosition(null); // 鼠标不在目标区域时隐藏放大镜
+          }
+        } else {
+          setMousePosition({ x: e.clientX, y: e.clientY });
+        }
       }
 
       if (isSelecting && startPoint) {
@@ -193,7 +234,40 @@ const AdvancedAreaSelector = ({ onAreaSelect, onCancel, targetElement }) => {
   }, [isSelecting, startPoint, dragInfo, handleInitialMouseMove, handleInitialMouseUp]);
 
   const handleConfirm = () => {
-    onAreaSelect(rect);
+    // 将overlay相对坐标转换为目标元素相对坐标
+    const targetEl = document.getElementById(targetElement);
+    const overlayEl = overlayRef.current;
+
+    if (targetEl && overlayEl && rect) {
+      const targetRect = targetEl.getBoundingClientRect();
+      const overlayRect = overlayEl.getBoundingClientRect();
+
+      // 计算目标元素在overlay中的位置
+      const targetInOverlay = {
+        left: targetRect.left - overlayRect.left,
+        top: targetRect.top - overlayRect.top
+      };
+
+      // 将选择区域转换为相对于目标元素的坐标
+      const convertedArea = {
+        left: rect.left - targetInOverlay.left,
+        top: rect.top - targetInOverlay.top,
+        width: rect.width,
+        height: rect.height
+      };
+
+      // 确保坐标在有效范围内
+      const finalArea = {
+        left: Math.max(0, convertedArea.left),
+        top: Math.max(0, convertedArea.top),
+        width: Math.min(convertedArea.width, targetRect.width - Math.max(0, convertedArea.left)),
+        height: Math.min(convertedArea.height, targetRect.height - Math.max(0, convertedArea.top))
+      };
+
+      onAreaSelect(finalArea);
+    } else {
+      onAreaSelect(rect);
+    }
   };
 
   const handleCancel = () => {

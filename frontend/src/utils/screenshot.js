@@ -1,7 +1,40 @@
 import html2canvas from 'html2canvas';
 
-export const captureScreenshot = async (elementId = 'pdf-viewer-container') => {
+// 创建一个简单的任务队列来避免同时进行多个截图操作
+let screenshotQueue = [];
+let isProcessing = false;
+
+const processQueue = async () => {
+  if (isProcessing || screenshotQueue.length === 0) return;
+
+  isProcessing = true;
+  const task = screenshotQueue.shift();
+
   try {
+    const result = await task.execute();
+    task.resolve(result);
+  } catch (error) {
+    task.reject(error);
+  }
+
+  isProcessing = false;
+  // 处理队列中的下一个任务
+  setTimeout(processQueue, 0);
+};
+
+const addToQueue = (executeFunction) => {
+  return new Promise((resolve, reject) => {
+    screenshotQueue.push({
+      execute: executeFunction,
+      resolve,
+      reject
+    });
+    processQueue();
+  });
+};
+
+export const captureScreenshot = async (elementId = 'pdf-viewer-container') => {
+  return addToQueue(async () => {
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error('未找到PDF预览区域');
@@ -26,56 +59,102 @@ export const captureScreenshot = async (elementId = 'pdf-viewer-container') => {
         });
       }, 'image/png');
     });
-  } catch (error) {
-    console.error('截图失败:', error);
-    throw error;
-  }
+  });
 };
 
 export const captureAreaScreenshot = async (elementId = 'pdf-viewer-container', area) => {
-  try {
+  return addToQueue(async () => {
     const element = document.getElementById(elementId);
     if (!element) {
       throw new Error('未找到PDF预览区域');
     }
 
+    console.log('Capture area input:', area);
+
+    // 优化html2canvas配置，使用1:1缩放确保坐标准确
     const canvas = await html2canvas(element, {
       allowTaint: true,
       useCORS: true,
-      scale: 1,
+      scale: 1, // 使用1:1缩放确保坐标准确
       backgroundColor: '#ffffff',
-      logging: false
+      logging: false,
+      height: element.offsetHeight,
+      width: element.offsetWidth,
+      scrollX: 0,
+      scrollY: 0,
+      removeContainer: true,
+      foreignObjectRendering: false
     });
 
-    // 创建新的canvas来裁剪选定区域
-    const croppedCanvas = document.createElement('canvas');
-    const ctx = croppedCanvas.getContext('2d');
+    // 使用OffscreenCanvas进行裁剪（如果支持的话）
+    const cropImage = (sourceCanvas, cropArea) => {
+      if (typeof OffscreenCanvas !== 'undefined') {
+        // 使用OffscreenCanvas进行后台处理
+        const offscreen = new OffscreenCanvas(cropArea.width, cropArea.height);
+        const ctx = offscreen.getContext('2d');
 
-    croppedCanvas.width = area.width;
-    croppedCanvas.height = area.height;
+        ctx.drawImage(
+          sourceCanvas,
+          cropArea.left, cropArea.top, cropArea.width, cropArea.height,
+          0, 0, cropArea.width, cropArea.height
+        );
 
-    // 从原始canvas中裁剪指定区域
-    ctx.drawImage(
-      canvas,
-      area.left, area.top, area.width, area.height,  // 源区域
-      0, 0, area.width, area.height                    // 目标区域
-    );
+        return offscreen;
+      } else {
+        // 回退到普通Canvas
+        const croppedCanvas = document.createElement('canvas');
+        const ctx = croppedCanvas.getContext('2d');
 
+        croppedCanvas.width = cropArea.width;
+        croppedCanvas.height = cropArea.height;
+
+        ctx.drawImage(
+          sourceCanvas,
+          cropArea.left, cropArea.top, cropArea.width, cropArea.height,
+          0, 0, cropArea.width, cropArea.height
+        );
+
+        return croppedCanvas;
+      }
+    };
+
+    const croppedCanvas = cropImage(canvas, area);
+
+    // 优化blob创建
     return new Promise((resolve) => {
-      croppedCanvas.toBlob((blob) => {
-        const url = URL.createObjectURL(blob);
-        resolve({
-          blob,
-          url,
-          dataUrl: croppedCanvas.toDataURL('image/png'),
-          canvas: croppedCanvas
-        });
-      }, 'image/png');
+      const createBlobFast = () => {
+        if (typeof OffscreenCanvas !== 'undefined' && croppedCanvas.convertToBlob) {
+          // 使用OffscreenCanvas的快速blob转换
+          croppedCanvas.convertToBlob({
+            type: 'image/jpeg', // 使用JPEG格式更快
+            quality: 0.9
+          }).then(blob => {
+            const url = URL.createObjectURL(blob);
+            resolve({
+              blob,
+              url,
+              dataUrl: null, // 不创建dataURL以节省时间
+              canvas: croppedCanvas
+            });
+          });
+        } else {
+          // 普通Canvas快速处理
+          croppedCanvas.toBlob(blob => {
+            const url = URL.createObjectURL(blob);
+            resolve({
+              blob,
+              url,
+              dataUrl: null, // 不创建dataURL以节省时间
+              canvas: croppedCanvas
+            });
+          }, 'image/jpeg', 0.9); // 使用JPEG格式和高质量
+        }
+      };
+
+      // 立即执行，不延迟
+      createBlobFast();
     });
-  } catch (error) {
-    console.error('区域截图失败:', error);
-    throw error;
-  }
+  });
 };
 
 export const downloadScreenshot = (dataUrl, filename = 'pdf-screenshot.png') => {
