@@ -70,7 +70,8 @@ body {
   margin-top: 8px;
 }
 
-.pdf-container {
+.pdf-container,
+.video-container {
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -78,7 +79,8 @@ body {
   overflow: hidden;
 }
 
-.pdf-toolbar {
+.pdf-toolbar,
+.video-toolbar {
   padding: 16px;
   border-bottom: 1px solid #e2e8f0;
   display: flex;
@@ -86,7 +88,8 @@ body {
   align-items: center;
 }
 
-.pdf-controls {
+.pdf-controls,
+.video-controls {
   display: flex;
   gap: 10px;
   align-items: center;
@@ -1305,5 +1308,578 @@ body {
 
   .chatv2-arrow-btn {
     width: 18px;
+  }
+}
+
+/* Video Player Styles */
+.video-viewer {
+  padding: 20px;
+  background-color: #f8fafc;
+  min-height: 600px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.keyboard-hint {
+  color: #6b7280;
+  font-size: 12px;
+  font-style: italic;
+  margin-left: 20px;
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  border-left: 3px solid #2563eb;
+}
+
+/* 视频播放器焦点样式 */
+.video-viewer video:focus {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .keyboard-hint {
+    display: none; /* 在移动设备上隐藏快捷键提示 */
+  }
+
+  .video-viewer video {
+    max-height: 50vh;
+  }
+}
+
+/* Enhanced Video Loading Styles */
+.video-viewer .loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+}
+
+.video-viewer .loading-content {
+  text-align: center;
+  max-width: 300px;
+}
+
+.video-viewer .loading-spinner {
+  width: 40px;
+  height: 40px;
+  margin: 0 auto 16px;
+  border: 4px solid #e2e8f0;
+  border-top: 4px solid #2563eb;
+  border-radius: 50%;
+  animation: video-spin 1s linear infinite;
+}
+
+.video-viewer .loading-text {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 16px;
+  font-weight: 500;
+}
+
+.video-viewer .loading-progress {
+  width: 100%;
+}
+
+.video-viewer .progress-bar {
+  width: 100%;
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.video-viewer .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6, #2563eb);
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.video-viewer .progress-text {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+@keyframes video-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Volume Overlay Styles */
+.volume-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
+  animation: volume-fade-in 0.2s ease-out;
+}
+
+.volume-display {
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 16px 20px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  min-width: 200px;
+}
+
+.volume-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+}
+
+.volume-bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.volume-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #06d6a0);
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.volume-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  min-width: 40px;
+  text-align: right;
+}
+
+@keyframes volume-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 静音状态特殊样式 */
+.volume-display .volume-bar-fill[style*="width: 0%"] {
+  background: #ef4444;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .volume-overlay {
+    top: 40%;
+  }
+
+  .volume-display {
+    padding: 12px 16px;
+    min-width: 160px;
+  }
+
+  .volume-icon {
+    font-size: 20px;
+  }
+
+  .volume-text {
+    font-size: 12px;
+  }
+
+  .seek-overlay {
+    top: 35%;
+  }
+
+  .seek-display {
+    padding: 10px 14px;
+  }
+
+  .seek-icon {
+    font-size: 20px;
+  }
+
+  .seek-text {
+    font-size: 13px;
+  }
+
+  .seek-time {
+    font-size: 11px;
+  }
+}
+
+/* Seek Display Styles */
+.seek-overlay {
+  position: absolute;
+  top: 45%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  pointer-events: none;
+  animation: seek-fade-in 0.2s ease-out;
+}
+
+.seek-display {
+  background: rgba(0, 0, 0, 0.85);
+  color: white;
+  padding: 12px 18px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+  min-width: 140px;
+}
+
+.seek-icon {
+  font-size: 24px;
+  margin-bottom: 2px;
+}
+
+.seek-text {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  text-align: center;
+}
+
+.seek-time {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+  text-align: center;
+}
+
+@keyframes seek-fade-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* 流式消息样式 */
+.message-text.streaming {
+  border-left: 3px solid #3b82f6;
+  padding-left: 12px;
+  background: linear-gradient(90deg, #f0f9ff 0%, #ffffff 100%);
+  transition: all 0.3s ease;
+}
+
+.message.bot.streaming {
+  animation: streamingPulse 2s infinite ease-in-out;
+}
+
+@keyframes streamingPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(59, 130, 246, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(59, 130, 246, 0.6);
+  }
+}
+
+.streaming-text {
+  position: relative;
+  min-height: 20px;
+  line-height: 1.6;
+}
+
+/* 优化的光标样式 - 只在有内容时显示 */
+.streaming-text:not(:empty) .stream-cursor,
+.streaming-text pre:not(:empty) + .stream-cursor {
+  display: inline-block;
+  animation: streamBlink 1s infinite;
+  color: #3b82f6;
+  font-weight: bold;
+  margin-left: 2px;
+}
+
+.stream-cursor {
+  display: none; /* 默认隐藏光标 */
+}
+
+/* 准备状态样式 */
+.preparing-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #6b7280;
+  font-style: italic;
+  padding: 8px 0;
+}
+
+.preparing-text {
+  color: #6b7280;
+  font-size: 14px;
+}
+
+.preparing-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.preparing-dots span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #3b82f6;
+  animation: preparingBounce 1.4s infinite ease-in-out both;
+}
+
+.preparing-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.preparing-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+@keyframes preparingBounce {
+  0%, 80%, 100% {
+    transform: scale(0.7);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* 当流式文本为空时，显示一个淡入的准备状态 */
+.streaming-text:empty::before {
+  content: "正在准备回复...";
+  color: #9ca3af;
+  font-style: italic;
+  animation: fadeInOut 2s infinite ease-in-out;
+}
+
+@keyframes fadeInOut {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+@keyframes streamBlink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+/* 处理状态的消息框样式 */
+.message.bot.processing {
+  animation: processingPulse 2s infinite ease-in-out;
+  transform: scale(0.98);
+  transition: all 0.3s ease;
+}
+
+@keyframes processingPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(107, 114, 128, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(107, 114, 128, 0.5);
+  }
+}
+
+/* 处理状态样式 */
+.processing-message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #9ca3af;
+  font-style: italic;
+  padding: 12px 0;
+  border-radius: 8px;
+  background: linear-gradient(90deg, #f8fafc 0%, #ffffff 100%);
+  transition: all 0.3s ease;
+}
+
+.processing-text {
+  color: #6b7280;
+  font-weight: 500;
+}
+
+/* 转圈动画 */
+.spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #e5e7eb;
+  border-top: 2px solid #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Markdown 内容样式 */
+.markdown-content {
+  color: #000000;
+  line-height: 1.6;
+}
+
+.markdown-content.streaming-content {
+  color: #000000;
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+  margin: 0.5em 0 0.3em 0;
+  color: #1f2937;
+}
+
+.markdown-content h1 {
+  font-size: 1.5em;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: 0.3em;
+}
+
+.markdown-content h2 {
+  font-size: 1.3em;
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 0.2em;
+}
+
+.markdown-content h3 {
+  font-size: 1.1em;
+}
+
+.markdown-content p {
+  margin: 0.5em 0;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+}
+
+.markdown-content li {
+  margin: 0.2em 0;
+}
+
+.markdown-content code {
+  background-color: #f3f4f6;
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background-color: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 1em;
+  margin: 0.5em 0;
+  overflow-x: auto;
+}
+
+.markdown-content pre code {
+  background: none;
+  padding: 0;
+  border-radius: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid #e5e7eb;
+  padding-left: 1em;
+  margin: 0.5em 0;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.markdown-content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid #e5e7eb;
+  padding: 0.5em;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: #f9fafb;
+  font-weight: 600;
+}
+
+.markdown-content a {
+  color: #2563eb;
+  text-decoration: none;
+}
+
+.markdown-content a:hover {
+  text-decoration: underline;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
+
+/* 确保处理状态消息的灰色样式 */
+.processing-message .processing-text {
+  color: #9ca3af !important;
+}
+
+/* 消息中的截图样式 */
+.message-screenshot {
+  margin-bottom: 8px;
+}
+
+.screenshot-image {
+  max-width: 100%;
+  max-height: 300px;
+  width: auto;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.screenshot-image:hover {
+  transform: scale(1.02);
+}
+
+/* 用户消息中的截图样式 */
+.message.user .screenshot-image {
+  border: 1px solid #dbeafe;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+/* 响应式截图显示 */
+@media (max-width: 768px) {
+  .screenshot-image {
+    max-height: 200px;
   }
 }

@@ -1,25 +1,21 @@
 import { useState } from 'react';
-import { pdfjs } from 'react-pdf';
 import FileUpload from './components/FileUpload';
-import PDFViewer from './components/PDFViewer';
+import VideoPlayer from './components/VideoPlayer';
 import QuestionModal from './components/QuestionModal';
 import AdvancedAreaSelector from './components/AdvancedAreaSelector';
-// import Chat from './components/Chat'; // 备选方案1 - 悬浮按钮聊天
-import ChatV2 from './components/ChatV2'; // 方案2 - 箭头展开聊天
+import ChatV2 from './components/ChatV2'; // 右侧聊天界面（支持流式）
 import { captureAreaScreenshot } from './utils/screenshot';
 import { submitQuestion } from './utils/api';
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.js`;
-
 function App() {
-  const [pdfFile, setPdfFile] = useState(null);
+  const [videoFile, setVideoFile] = useState(null);
   const [currentScreenshot, setCurrentScreenshot] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [isAreaSelecting, setIsAreaSelecting] = useState(false);
   const [chatExpanded, setChatExpanded] = useState(false);
 
   const handleFileUpload = (file) => {
-    setPdfFile(file);
+    setVideoFile(file);
   };
 
   const handleScreenshot = () => {
@@ -35,7 +31,7 @@ function App() {
       setChatExpanded(true);
 
       // 使用异步处理截图，避免阻塞UI
-      const screenshot = await captureAreaScreenshot('pdf-viewer-container', area);
+      const screenshot = await captureAreaScreenshot('video-viewer-container', area);
 
       // 设置截图
       setCurrentScreenshot(screenshot);
@@ -62,8 +58,8 @@ function App() {
     });
   };
 
-  const clearPDF = () => {
-    setPdfFile(null);
+  const clearVideo = () => {
+    setVideoFile(null);
     setQuestions([]);
     setCurrentScreenshot(null);
   };
@@ -71,29 +67,29 @@ function App() {
   return (
     <div className="container">
       <header className="header">
-        <h1>PDF智能问答系统</h1>
-        <p>上传PDF文件，截图提问，获得智能回答</p>
+        <h1>MP4智能问答系统</h1>
+        <p>上传MP4文件，截图提问，获得智能回答</p>
       </header>
 
-      {!pdfFile ? (
+      {!videoFile ? (
         <FileUpload onFileUpload={handleFileUpload} />
       ) : (
         <>
           <div style={{ marginBottom: '20px' }}>
             <button
               className="btn btn-secondary"
-              onClick={clearPDF}
+              onClick={clearVideo}
               style={{ marginRight: '10px' }}
             >
               重新选择文件
             </button>
             <span style={{ color: '#64748b' }}>
-              当前文件: {pdfFile.name}
+              当前文件: {videoFile.name}
             </span>
           </div>
 
-          <PDFViewer
-            file={pdfFile}
+          <VideoPlayer
+            file={videoFile}
             onAreaScreenshot={handleScreenshot}
           />
 
@@ -153,11 +149,11 @@ function App() {
         <AdvancedAreaSelector
           onAreaSelect={handleAreaSelect}
           onCancel={handleAreaCancel}
-          targetElement="pdf-viewer-container"
+          targetElement="video-viewer-container"
         />
       )}
 
-      {/* 方案2 - 箭头展开聊天 */}
+      {/* 右侧聊天界面（支持流式） */}
       <ChatV2
         isExpanded={chatExpanded}
         onToggle={handleChatToggle}

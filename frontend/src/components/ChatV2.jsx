@@ -1,14 +1,20 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, startTransition } from 'react';
+import { flushSync } from 'react-dom';
 import { sendChatMessage, getChatHistory } from '../utils/api';
+import ReactMarkdown from 'react-markdown';
 
 const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreenshot }) => {
   const [isExpanded, setIsExpanded] = useState(propExpanded || false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [screenshotLoaded, setScreenshotLoaded] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState(null);
   const messagesEndRef = useRef(null);
   const imgRef = useRef(null);
+  const aiMessageCreated = useRef(false); // 使用ref来同步跟踪
+  const currentAiMessageId = useRef(null); // 使用ref存储消息ID
 
   // 同步外部状态
   useEffect(() => {
@@ -52,41 +58,188 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
       type: 'user',
       content: inputValue,
       timestamp: new Date(),
-      hasScreenshot: !!screenshot
+      hasScreenshot: !!screenshot,
+      screenshotUrl: screenshot?.url || null
     };
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue('');
+
+    // 发送消息后立即清除截图缓冲区
+    if (screenshot && onClearScreenshot) {
+      onClearScreenshot();
+    }
+
     setIsLoading(true);
+    setIsStreaming(true);
+    aiMessageCreated.current = false; // 重置创建标志
+    currentAiMessageId.current = null; // 重置消息ID
+
+    // 立即创建AI消息占位符，显示思考状态
+    const aiMessageId = Date.now() + 1;
+    const aiMessage = {
+      id: aiMessageId,
+      type: 'bot',
+      content: '小魁正在思考中...',
+      timestamp: new Date(),
+      isStreaming: true,
+      isPreparing: true // 标记为准备状态
+    };
+
+    setMessages(prev => [...prev, aiMessage]);
+    currentAiMessageId.current = aiMessageId;
+    aiMessageCreated.current = true;
 
     try {
-      // 发送消息和截图（如果有的话）
-      const response = await sendChatMessage(inputValue, screenshot);
+      // 创建FormData发送流式请求
+      const formData = new FormData();
+      formData.append('message', userMessage.content);
+      formData.append('timestamp', userMessage.timestamp.toISOString());
 
-      const botMessage = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: response.message || response.reply || '抱歉，我暂时无法回答这个问题。',
-        timestamp: new Date()
-      };
-
-      setMessages(prev => [...prev, botMessage]);
-
-      // 发送成功后清除截图
-      if (screenshot && onClearScreenshot) {
-        onClearScreenshot();
+      // 如果有截图，添加到表单数据
+      if (screenshot?.blob) {
+        formData.append('screenshot', screenshot.blob, 'screenshot.png');
       }
+
+      const response = await fetch('/api/chat/stream', {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        console.log('📦 收到数据块:', buffer);
+
+        const lines = buffer.split('\n');
+        buffer = lines.pop() || '';
+
+        for (const line of lines) {
+          console.log('📄 处理行:', line);
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              console.log('📊 解析的数据:', data);
+
+              if (data.type === 'content') {
+                // 直接更新已有的AI消息内容
+                const messageId = currentAiMessageId.current;
+                console.log('📝 更新消息ID:', messageId, '内容:', data.content);
+
+                setMessages(prev => {
+                  const updated = prev.map(msg => {
+                    if (msg.id === messageId) {
+                      // 如果是第一次收到内容，清除思考状态
+                      if (msg.isPreparing) {
+                        const updatedMsg = {
+                          ...msg,
+                          content: data.content,
+                          isPreparing: false
+                        };
+                        console.log('📝 清除思考状态，开始流式内容:', updatedMsg.content);
+                        return updatedMsg;
+                      } else {
+                        // 追加流式内容
+                        const updatedMsg = { ...msg, content: msg.content + data.content };
+                        console.log('📝 追加流式内容:', updatedMsg.content);
+                        return updatedMsg;
+                      }
+                    }
+                    return msg;
+                  });
+                  return updated;
+                });
+                console.log('📝 流式更新AI消息:', data.content);
+              } else if (data.type === 'user_saved') {
+                console.log('✅', data.message);
+              } else if (data.type === 'processing') {
+                console.log('🔄 忽略处理状态，已在AI消息中显示');
+                // 不再设置单独的处理消息，因为AI消息本身显示思考状态
+              } else if (data.type === 'done') {
+                // 流式响应完成，标记消息为非流式状态
+                const messageId = currentAiMessageId.current;
+                if (messageId) {
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === messageId
+                      ? { ...msg, isStreaming: false, isPreparing: false }
+                      : msg
+                  ));
+                }
+                setStreamingMessageId(null);
+                currentAiMessageId.current = null;
+                aiMessageCreated.current = false;
+                setIsStreaming(false);
+                setIsLoading(false);
+              } else if (data.error) {
+                // 处理错误
+                const messageId = currentAiMessageId.current;
+                if (messageId) {
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === messageId
+                      ? { ...msg, content: `❌ ${data.error}`, isStreaming: false, isPreparing: false }
+                      : msg
+                  ));
+                } else {
+                  // 创建新的错误消息
+                  const errorMessage = {
+                    id: Date.now() + 2,
+                    type: 'bot',
+                    content: `❌ ${data.error}`,
+                    timestamp: new Date(),
+                    isStreaming: false
+                  };
+                  setMessages(prev => [...prev, errorMessage]);
+                }
+                setStreamingMessageId(null);
+                currentAiMessageId.current = null;
+                aiMessageCreated.current = false;
+                setIsStreaming(false);
+                setIsLoading(false);
+              }
+            } catch (e) {
+              console.error('解析流式数据错误:', e);
+            }
+          }
+        }
+      }
+
     } catch (error) {
-      console.error('发送消息失败:', error);
-      const errorMessage = {
-        id: Date.now() + 1,
-        type: 'bot',
-        content: '抱歉，发送消息时出现错误，请稍后重试。',
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      console.error('流式聊天错误:', error);
+      // 如果有流式消息ID，更新为错误状态
+      const messageId = currentAiMessageId.current;
+      if (messageId) {
+        setMessages(prev => prev.map(msg =>
+          msg.id === messageId
+            ? { ...msg, content: '抱歉，发送消息时出现错误，请稍后重试。', isStreaming: false, isPreparing: false }
+            : msg
+        ));
+      } else {
+        // 否则添加新的错误消息
+        const errorMessage = {
+          id: Date.now() + 2,
+          type: 'bot',
+          content: '抱歉，发送消息时出现错误，请稍后重试。',
+          timestamp: new Date(),
+          isStreaming: false
+        };
+        setMessages(prev => [...prev, errorMessage]);
+      }
     } finally {
       setIsLoading(false);
+      setIsStreaming(false);
+      setStreamingMessageId(null);
+      currentAiMessageId.current = null;
+      aiMessageCreated.current = false;
     }
   };
 
@@ -156,14 +309,51 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
               </div>
             ) : (
               messages.map((message) => (
-                <div key={message.id} className={`message ${message.type}`}>
+                <div key={message.id} className={`message ${message.type} ${message.isStreaming ? 'streaming' : ''}`}>
                   <div className="message-avatar">
                     {message.type === 'user' ? '👤' : '🤖'}
                   </div>
                   <div className="message-content">
+                    {/* 如果有截图，先显示图片 */}
+                    {message.screenshotUrl && (
+                      <div className="message-screenshot">
+                        <img
+                          src={message.screenshotUrl}
+                          alt="用户截图"
+                          className="screenshot-image"
+                        />
+                      </div>
+                    )}
                     <div className="message-text">
-                      {message.hasScreenshot && <span className="screenshot-indicator">📎 </span>}
-                      {message.content}
+                      {message.type === 'bot' ? (
+                        <div className="markdown-content">
+                          {message.isStreaming ? (
+                            // 流式消息：检查是否为思考状态
+                            message.isPreparing ? (
+                              // 思考状态：显示思考提示
+                              <div className="processing-message">
+                                <div className="spinner"></div>
+                                <span className="processing-text">{message.content}</span>
+                              </div>
+                            ) : (
+                              // 流式输出：直接显示文本，不用ReactMarkdown避免性能问题
+                              <div className="streaming-text">
+                                <pre style={{whiteSpace: 'pre-wrap', fontFamily: 'inherit', margin: 0}}>
+                                  {message.content}
+                                </pre>
+                                {message.content && <span className="stream-cursor">|</span>}
+                              </div>
+                            )
+                          ) : (
+                            // 完成的消息：使用ReactMarkdown渲染
+                            <ReactMarkdown>
+                              {message.content}
+                            </ReactMarkdown>
+                          )}
+                        </div>
+                      ) : (
+                        message.content
+                      )}
                     </div>
                     <div className="message-time">
                       {message.timestamp.toLocaleTimeString('zh-CN', {
@@ -174,18 +364,6 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
                   </div>
                 </div>
               ))
-            )}
-            {isLoading && (
-              <div className="message bot loading">
-                <div className="message-avatar">🤖</div>
-                <div className="message-content">
-                  <div className="typing-indicator">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                  </div>
-                </div>
-              </div>
             )}
             <div ref={messagesEndRef} />
           </div>

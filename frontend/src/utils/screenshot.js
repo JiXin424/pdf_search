@@ -33,11 +33,11 @@ const addToQueue = (executeFunction) => {
   });
 };
 
-export const captureScreenshot = async (elementId = 'pdf-viewer-container') => {
+export const captureScreenshot = async (elementId = 'video-viewer-container') => {
   return addToQueue(async () => {
     const element = document.getElementById(elementId);
     if (!element) {
-      throw new Error('未找到PDF预览区域');
+      throw new Error('未找到视频预览区域');
     }
 
     const canvas = await html2canvas(element, {
@@ -62,11 +62,11 @@ export const captureScreenshot = async (elementId = 'pdf-viewer-container') => {
   });
 };
 
-export const captureAreaScreenshot = async (elementId = 'pdf-viewer-container', area) => {
+export const captureAreaScreenshot = async (elementId = 'video-viewer-container', area) => {
   return addToQueue(async () => {
     const element = document.getElementById(elementId);
     if (!element) {
-      throw new Error('未找到PDF预览区域');
+      throw new Error('未找到视频预览区域');
     }
 
     console.log('Capture area input:', area);
@@ -157,7 +157,7 @@ export const captureAreaScreenshot = async (elementId = 'pdf-viewer-container', 
   });
 };
 
-export const downloadScreenshot = (dataUrl, filename = 'pdf-screenshot.png') => {
+export const downloadScreenshot = (dataUrl, filename = 'video-screenshot.png') => {
   const link = document.createElement('a');
   link.download = filename;
   link.href = dataUrl;

@@ -19,19 +19,19 @@ const FileUpload = ({ onFileUpload }) => {
     setIsDragOver(false);
 
     const files = e.dataTransfer.files;
-    if (files.length > 0 && files[0].type === 'application/pdf') {
+    if (files.length > 0 && files[0].type.startsWith('video/')) {
       onFileUpload(files[0]);
     } else {
-      alert('请上传PDF文件');
+      alert('请上传MP4视频文件');
     }
   };
 
   const handleFileSelect = (e) => {
     const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
+    if (file && file.type.startsWith('video/')) {
       onFileUpload(file);
     } else {
-      alert('请上传PDF文件');
+      alert('请上传MP4视频文件');
     }
   };
 
@@ -50,16 +50,16 @@ const FileUpload = ({ onFileUpload }) => {
       <input
         ref={fileInputRef}
         type="file"
-        accept=".pdf"
+        accept=".mp4,video/*"
         onChange={handleFileSelect}
         className="upload-input"
       />
-      <div className="upload-icon">📄</div>
+      <div className="upload-icon">🎬</div>
       <div className="upload-text">
-        拖拽PDF文件到这里，或点击选择文件
+        拖拽MP4视频文件到这里，或点击选择文件
       </div>
       <div className="upload-hint">
-        支持PDF格式，最大50MB
+        支持MP4格式，最大100MB
       </div>
     </div>
   );
