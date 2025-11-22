@@ -894,66 +894,65 @@ body {
 }
 */
 
-/* 方案2 - 箭头展开聊天样式 */
+/* 方案2 - 箭头展开聊天样式 (美化版) */
 .chatv2-container {
   position: fixed;
   top: 0;
   right: 0;
   height: 100vh;
   z-index: 1500;
+  font-family: 'PingFang SC', 'Microsoft YaHei', sans-serif;
 }
 
 .chatv2-arrow-btn {
   position: absolute;
   right: 0;
   top: 15%;
-  width: 24px;
-  height: 60px;
-  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  width: 28px;
+  height: 80px;
+  background: linear-gradient(135deg, #4F46E5, #818CF8);
   border: none;
-  border-radius: 8px 0 0 8px;
+  border-radius: 12px 0 0 12px;
   color: white;
-  font-size: 16px;
+  font-size: 20px;
   font-weight: bold;
   cursor: pointer;
-  box-shadow: -2px 0 8px rgba(37, 99, 235, 0.3);
-  transition: all 0.3s ease;
+  box-shadow: -2px 0 12px rgba(79, 70, 229, 0.4);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1501;
   transform: translateX(0);
-  will-change: transform;
 }
 
 .chatv2-arrow-btn:hover {
-  background: linear-gradient(135deg, #1d4ed8, #2563eb);
-  box-shadow: -4px 0 12px rgba(37, 99, 235, 0.4);
-  transform: translateX(-2px);
+  background: linear-gradient(135deg, #4338CA, #6366F1);
+  box-shadow: -4px 0 16px rgba(79, 70, 229, 0.5);
+  transform: translateX(-3px);
 }
 
 .chatv2-arrow-btn.expanded {
-  background: linear-gradient(135deg, #6b7280, #374151);
-  border-radius: 0 8px 8px 0;
-  transform: translateX(-380px);
+  background: #6B7280;
+  border-radius: 0 12px 12px 0;
+  transform: translateX(-400px);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.2);
 }
 
 .chatv2-panel {
   position: absolute;
   top: 0;
   right: 0;
-  width: 380px;
+  width: 400px;
   height: 100vh;
-  background: white;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px 0 0 0;
-  box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+  background: #F9FAFB;
+  border-left: 1px solid #E5E7EB;
+  box-shadow: -6px 0 24px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
   transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   overflow: hidden;
-  will-change: transform;
 }
 
 .chatv2-panel.expanded {
@@ -961,76 +960,97 @@ body {
 }
 
 .chatv2-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
-  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  padding: 20px 24px;
+  border-bottom: 1px solid #E5E7EB;
+  background: white;
   display: flex;
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .chatv2-header h3 {
   margin: 0;
-  color: #1e293b;
-  font-size: 16px;
-  font-weight: 600;
+  color: #111827;
+  font-size: 18px;
+  font-weight: 700;
 }
 
 .chatv2-header-actions {
   display: flex;
-  gap: 8px;
+  gap: 12px;
 }
 
 .chatv2-clear-btn {
   background: none;
   border: none;
-  font-size: 14px;
+  font-size: 16px;
   cursor: pointer;
-  color: #6b7280;
-  padding: 4px;
-  border-radius: 4px;
+  color: #9CA3AF;
+  padding: 6px;
+  border-radius: 8px;
   transition: all 0.2s;
 }
 
 .chatv2-clear-btn:hover {
-  color: #374151;
-  background: #e5e7eb;
+  color: #EF4444;
+  background: #FEE2E2;
 }
 
 .chatv2-messages {
   flex: 1;
-  padding: 16px;
+  padding: 20px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 18px;
 }
 
 .chatv2-welcome {
   text-align: center;
-  color: #6b7280;
-  margin-top: 20px;
+  color: #6B7280;
+  margin: auto 0;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .chatv2-welcome .welcome-icon {
-  font-size: 36px;
-  margin-bottom: 12px;
+  font-size: 60px;
+  margin-bottom: 20px;
+  animation: welcome-bounce 2s infinite;
+}
+
+@keyframes welcome-bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-20px);
+  }
+  60% {
+    transform: translateY(-10px);
+  }
 }
 
 .chatv2-welcome .welcome-text p {
-  margin: 6px 0;
-  font-size: 14px;
+  margin: 8px 0;
+  font-size: 16px;
+  line-height: 1.6;
 }
 
 .chatv2-welcome .welcome-text p:first-child {
   font-weight: 600;
   color: #374151;
+  font-size: 18px;
 }
 
 .chatv2-messages .message {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   max-width: 90%;
 }
 
@@ -1039,118 +1059,104 @@ body {
   flex-direction: row-reverse;
 }
 
-.chatv2-messages .message.user .message-content {
-  background: #2563eb;
-  color: white;
-  border-radius: 16px 16px 4px 16px;
-}
-
-.chatv2-messages .message.bot .message-content {
-  background: #f1f5f9;
-  color: #374151;
-  border-radius: 16px 16px 16px 4px;
-}
-
 .chatv2-messages .message-avatar {
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-size: 18px;
   flex-shrink: 0;
+  border-radius: 50%;
+  background: #E5E7EB;
+}
+
+.chatv2-messages .message.user .message-avatar {
+  background: #C7D2FE;
 }
 
 .chatv2-messages .message-content {
-  padding: 10px 14px;
-  border-radius: 16px;
-  flex: 1;
+  padding: 12px 18px;
+  border-radius: 20px;
+  position: relative;
+}
+
+.chatv2-messages .message.user .message-content {
+  background: linear-gradient(135deg, #4F46E5, #6366F1);
+  color: white;
+  border-radius: 20px 4px 20px 20px;
+}
+
+.chatv2-messages .message.bot .message-content {
+  background: white;
+  color: #374151;
+  border-radius: 4px 20px 20px 20px;
+  border: 1px solid #E5E7EB;
 }
 
 .chatv2-messages .message-text {
-  margin-bottom: 4px;
-  line-height: 1.4;
+  margin-bottom: 6px;
+  line-height: 1.6;
   word-wrap: break-word;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .chatv2-messages .message-time {
-  font-size: 10px;
-  opacity: 0.7;
+  font-size: 11px;
+  opacity: 0.6;
 }
 
 .chatv2-messages .message.user .message-time {
   text-align: right;
-}
-
-.chatv2-messages .typing-indicator {
-  display: flex;
-  gap: 3px;
-  align-items: center;
-  padding: 6px 0;
-}
-
-.chatv2-messages .typing-indicator span {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background-color: #6b7280;
-  animation: typing 1.4s infinite;
-}
-
-.chatv2-messages .typing-indicator span:nth-child(2) {
-  animation-delay: 0.2s;
-}
-
-.chatv2-messages .typing-indicator span:nth-child(3) {
-  animation-delay: 0.4s;
+  color: #E0E7FF;
 }
 
 .chatv2-input-area {
-  padding: 16px;
-  border-top: 1px solid #e5e7eb;
+  padding: 20px;
+  border-top: 1px solid #E5E7EB;
   background: white;
   flex-shrink: 0;
+  box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .chatv2-input-wrapper {
   display: flex;
-  gap: 8px;
+  gap: 12px;
   align-items: flex-end;
 }
 
 .chatv2-input {
   flex: 1;
-  min-height: 36px;
-  max-height: 100px;
-  padding: 8px 12px;
-  border: 1px solid #d1d5db;
-  border-radius: 18px;
-  font-size: 14px;
-  line-height: 1.4;
+  min-height: 44px;
+  max-height: 120px;
+  padding: 12px 18px;
+  border: 1px solid #D1D5DB;
+  border-radius: 22px;
+  font-size: 15px;
+  line-height: 1.5;
   resize: none;
   outline: none;
-  transition: border-color 0.2s;
+  transition: all 0.2s;
 }
 
 .chatv2-input:focus {
-  border-color: #2563eb;
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.1);
+  border-color: #4F46E5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
 .chatv2-input:disabled {
-  background-color: #f9fafb;
+  background-color: #F3F4F6;
   cursor: not-allowed;
 }
 
 .chatv2-send-btn {
-  width: 36px;
-  height: 36px;
+  width: 44px;
+  height: 44px;
   border: none;
   border-radius: 50%;
-  background: #2563eb;
+  background: #4F46E5;
   color: white;
-  font-size: 14px;
+  font-size: 20px;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -1160,22 +1166,23 @@ body {
 }
 
 .chatv2-send-btn:hover:not(:disabled) {
-  background: #1d4ed8;
-  transform: scale(1.05);
+  background: #4338CA;
+  transform: scale(1.1);
 }
 
 .chatv2-send-btn:disabled {
-  background: #d1d5db;
+  background: #D1D5DB;
   cursor: not-allowed;
   transform: none;
 }
 
 .chatv2-input-hint {
-  font-size: 10px;
-  color: #9ca3af;
-  margin-top: 6px;
+  font-size: 11px;
+  color: #9CA3AF;
+  margin-top: 8px;
   text-align: center;
 }
+
 
 /* 截图缓冲区样式 */
 .chatv2-screenshot-buffer {
