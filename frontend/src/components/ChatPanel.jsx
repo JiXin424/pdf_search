@@ -302,7 +302,7 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
           <div className="chatv2-messages">
             {messages.length === 0 ? (
               <div className="chatv2-welcome">
-                <div className="welcome-icon">🤖</div>
+                <div className="welcome-icon">💡</div>
                 <div className="welcome-text">
                   <p>您好！我是小魁，请问有什么学习上的问题要问我的嘛。</p>
                   {disabled ? (
