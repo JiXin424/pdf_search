@@ -3,7 +3,7 @@ import { flushSync } from 'react-dom';
 import { sendChatMessage, getChatHistory } from '../utils/api';
 import ReactMarkdown from 'react-markdown';
 
-const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreenshot }) => {
+const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreenshot, mode = 'video', disabled = false }) => {
   const [isExpanded, setIsExpanded] = useState(propExpanded || false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
@@ -51,7 +51,7 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
   }, [messages]);
 
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
+    if (!inputValue.trim() || isLoading || disabled) return;
 
     const userMessage = {
       id: Date.now(),
@@ -95,6 +95,7 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
       const formData = new FormData();
       formData.append('message', userMessage.content);
       formData.append('timestamp', userMessage.timestamp.toISOString());
+      formData.append('mode', mode); // 添加模式信息
 
       // 如果有截图，添加到表单数据
       if (screenshot?.blob) {
@@ -304,7 +305,11 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
                 <div className="welcome-icon">🤖</div>
                 <div className="welcome-text">
                   <p>您好！我是您的智能助手</p>
-                  <p>有什么可以帮助您的吗？</p>
+                  {disabled ? (
+                    <p>请先选择模式并上传文件开始使用</p>
+                  ) : (
+                    <p>有什么可以帮助您的吗？</p>
+                  )}
                 </div>
               </div>
             ) : (
@@ -409,21 +414,21 @@ const ChatV2 = ({ isExpanded: propExpanded, onToggle, screenshot, onClearScreens
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={handleKeyPress}
-                placeholder="输入您的问题..."
+                placeholder={disabled ? "请先上传文件..." : "输入您的问题..."}
                 rows="1"
-                disabled={isLoading}
+                disabled={isLoading || disabled}
               />
               <button
                 className="chatv2-send-btn"
                 onClick={handleSendMessage}
-                disabled={!inputValue.trim() || isLoading}
+                disabled={!inputValue.trim() || isLoading || disabled}
                 title="发送消息"
               >
                 {isLoading ? '⏳' : '📤'}
               </button>
             </div>
             <div className="chatv2-input-hint">
-              按 Enter 发送，Shift + Enter 换行
+              {disabled ? "上传文件后即可开始对话" : "按 Enter 发送，Shift + Enter 换行"}
             </div>
           </div>
         </div>
